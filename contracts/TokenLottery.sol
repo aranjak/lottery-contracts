@@ -24,7 +24,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     uint256 public maxNumberTicketsPerBuyOrClaim = 100;
 
-    uint256 public maxPriceTicketInTokens = 50 ether;
+    uint256 public maxPriceTicketInTokens = 500 ether;
     uint256 public minPriceTicketInTokens = 0.005 ether;
 
     uint256 public pendingInjectionNextLottery;
