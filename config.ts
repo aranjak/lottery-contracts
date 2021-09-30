@@ -29,7 +29,7 @@ module.exports = {
       },
     },
   },
-  operator: "0xE4dEc5FB434272A8c4c031bB70E798ed44D28013",
-  treasure: "0xE4dEc5FB434272A8c4c031bB70E798ed44D28013",
-  injector: "0xE4dEc5FB434272A8c4c031bB70E798ed44D28013"
+  operator: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
+  treasure: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
+  injector: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc"
 };

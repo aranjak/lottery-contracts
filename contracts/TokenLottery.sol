@@ -18,6 +18,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
     address public injectorAddress;
     address public operatorAddress;
     address public treasuryAddress;
+    address public partnerAddress;
 
     uint256 public currentLotteryId;
     uint256 public currentTicketId;
@@ -34,6 +35,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
     uint256 public constant MIN_LENGTH_LOTTERY = 15 minutes;
     uint256 public constant MAX_LENGTH_LOTTERY = 4 days + 5 minutes; // 4 days
     uint256 public constant MAX_TREASURY_FEE = 3000; // 30%
+    uint256 public partnerPercent; // % of treasure fee, in bp 
 
     IERC20 public token;
     IRandomNumberGenerator public randomGenerator;
@@ -332,7 +334,14 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         amountToWithdrawToTreasury += (_lotteries[_lotteryId].amountCollectedInTokens - amountToShareToWinners);
 
         // Transfer tokens to treasury address
-        token.safeTransfer(treasuryAddress, amountToWithdrawToTreasury);
+        if (partnerPercent > 0 && partnerAddress != address(0)) {
+            uint256 partnerAmount = amountToWithdrawToTreasury * partnerPercent / 10000;
+            amountToWithdrawToTreasury -= partnerAmount;
+            token.safeTransfer(treasuryAddress, amountToWithdrawToTreasury);
+            token.safeTransfer(partnerAddress, partnerAmount);
+        } else {
+            token.safeTransfer(treasuryAddress, amountToWithdrawToTreasury);
+        }
 
         emit LotteryNumberDrawn(currentLotteryId, finalNumber, numberAddressesInPreviousBracket);
     }
@@ -507,6 +516,17 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         injectorAddress = _injectorAddress;
 
         emit NewOperatorAndTreasuryAndInjectorAddresses(_operatorAddress, _treasuryAddress, _injectorAddress);
+    }
+    
+    /**
+     * @notice Set partner and his percentage of the treasure
+     * @dev Only callable by owner
+     * @param _partnerAddress: address of the partner
+     * @param _partnerPercent: percentage in bp of the treasury
+     */
+    function setPartnerAndFee(address _partnerAddress, uint256 _partnerPercent) external onlyOwner {
+        partnerAddress = _partnerAddress;
+        partnerPercent = _partnerPercent;
     }
 
     /**

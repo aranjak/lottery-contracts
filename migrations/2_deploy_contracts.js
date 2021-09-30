@@ -9,18 +9,34 @@ module.exports = async function(deployer, network) {
     await deployer.deploy(RandomNumberGenerator, config.Chainlink.VRF.Coordinator[network], config.Chainlink.LinkToken[network]);
     const randomNumberGenerator = await RandomNumberGenerator.deployed();
 
-    await randomNumberGenerator.setFee(config.Chainlink.VRF.Fee[network]);
-    console.log('randomNumberGenerator.setFee', 'done');
-
-    await randomNumberGenerator.setKeyHash(config.Chainlink.VRF.KeyHash[network]);
-    console.log('randomNumberGenerator.setKeyHash', 'done');
-
     await deployer.deploy(TokenLottery, argv['token'], randomNumberGenerator.address);
     const tokenLottery = await TokenLottery.deployed();
 
-    await randomNumberGenerator.setLotteryAddress(tokenLottery.address);
-    console.log('randomNumberGenerator.setLotteryAddress', 'done');
+    try {
+        await randomNumberGenerator.setFee(config.Chainlink.VRF.Fee[network]);
+        console.log('randomNumberGenerator.setFee', 'done');
+    } catch (error) {
+        console.log(error);
+    }
 
-    await tokenLottery.setOperatorAndTreasuryAndInjectorAddresses(config.operator, config.treasure, config.injector);
-    console.log('tokenLottery.setOperatorAndTreasuryAndInjectorAddresses', 'done');
+    try {
+        await randomNumberGenerator.setKeyHash(config.Chainlink.VRF.KeyHash[network]);
+        console.log('randomNumberGenerator.setKeyHash', 'done');
+    } catch (error) {
+        console.log(error);
+    }
+
+    try {
+        await randomNumberGenerator.setLotteryAddress(tokenLottery.address);
+        console.log('randomNumberGenerator.setLotteryAddress', 'done');
+    } catch (error) {
+        console.log(error);
+    }
+
+    try {
+        await tokenLottery.setOperatorAndTreasuryAndInjectorAddresses(config.operator, config.treasure, config.injector);
+        console.log('tokenLottery.setOperatorAndTreasuryAndInjectorAddresses', 'done');
+    } catch (error) {
+        console.log(error);
+    }
 }

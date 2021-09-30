@@ -68,6 +68,17 @@ module.exports = {
     //   timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
     //   skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     // },
+    bsctestnet: {
+      provider: () => new HDWalletProvider(
+        privateKey,
+        "https://data-seed-prebsc-1-s2.binance.org:8545"
+      ),
+      network_id: 97,
+      gas: 5500000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
     mumbai: {
       provider: () => new HDWalletProvider(
         privateKey,
