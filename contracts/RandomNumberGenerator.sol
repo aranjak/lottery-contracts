@@ -61,6 +61,7 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
      * @param _lottery: address of the Lottery
      */
     function setLotteryAddress(address _lottery) external onlyOwner {
+        require(_lottery != address(0),"_lottery can not be zero address!");
         lottery = _lottery;
     }
 
