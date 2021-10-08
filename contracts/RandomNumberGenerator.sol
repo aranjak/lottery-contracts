@@ -16,6 +16,12 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
     uint32 public randomResult;
     uint256 public fee;
     uint256 public latestLotteryId;
+    address public immutable wallet;
+    
+    modifier onlyWallet() {
+        require(msg.sender == wallet, "Only multisig wallet can perfrom this action");
+        _;
+    }
 
     /**
      * @notice Constructor
@@ -25,8 +31,12 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
      * @param _vrfCoordinator: address of the VRF coordinator
      * @param _linkToken: address of the LINK token
      */
-    constructor(address _vrfCoordinator, address _linkToken) VRFConsumerBase(_vrfCoordinator, _linkToken) {
-        //
+    constructor(address _vrfCoordinator, address _linkToken, address _wallet, uint256 _fee, bytes32 _keyHash)
+        VRFConsumerBase(_vrfCoordinator, _linkToken)
+    {
+        wallet = _wallet;
+        fee = _fee;
+        keyHash = _keyHash;
     }
 
     /**
@@ -44,7 +54,7 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
      * @notice Change the fee
      * @param _fee: new fee (in LINK)
      */
-    function setFee(uint256 _fee) external onlyOwner {
+    function setFee(uint256 _fee) external onlyWallet {
         fee = _fee;
     }
 
@@ -52,7 +62,7 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
      * @notice Change the keyHash
      * @param _keyHash: new keyHash
      */
-    function setKeyHash(bytes32 _keyHash) external onlyOwner {
+    function setKeyHash(bytes32 _keyHash) external onlyWallet {
         keyHash = _keyHash;
     }
 
@@ -60,7 +70,7 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
      * @notice Set the address for the Lottery
      * @param _lottery: address of the Lottery
      */
-    function setLotteryAddress(address _lottery) external onlyOwner {
+    function setLotteryAddress(address _lottery) external onlyWallet {
         require(_lottery != address(0),"_lottery can not be zero address!");
         lottery = _lottery;
     }
@@ -69,9 +79,9 @@ contract RandomNumberGenerator is VRFConsumerBase, IRandomNumberGenerator, Ownab
      * @notice It allows the admin to withdraw tokens sent to the contract
      * @param _tokenAddress: the address of the token to withdraw
      * @param _tokenAmount: the number of token amount to withdraw
-     * @dev Only callable by owner.
+     * @dev Only callable by multisig wallet
      */
-    function withdrawTokens(address _tokenAddress, uint256 _tokenAmount) external onlyOwner {
+    function withdrawTokens(address _tokenAddress, uint256 _tokenAmount) external onlyWallet {
         IERC20(_tokenAddress).safeTransfer(address(msg.sender), _tokenAmount);
     }
 

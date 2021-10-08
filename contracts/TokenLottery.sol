@@ -20,6 +20,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
     address public operatorAddress;
     address public treasuryAddress;
     address public partnerAddress;
+    address public immutable wallet;
 
     uint256 public currentLotteryId;
     uint256 public currentTicketId;
@@ -98,6 +99,11 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         require((msg.sender == owner()) || (msg.sender == injectorAddress), "Not owner or injector");
         _;
     }
+    
+    modifier onlyWallet() {
+        require(msg.sender == wallet, "Only multisig wallet can perfrom this action");
+        _;
+    }
 
     event AdminTokenRecovery(address token, uint256 amount);
     event LotteryClose(uint256 indexed lotteryId, uint256 firstTicketIdNextLottery);
@@ -123,7 +129,14 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @param _tokenAddress: address of the Token
      * @param _randomGeneratorAddress: address of the RandomGenerator contract used to work with ChainLink VRF
      */
-    constructor(address _tokenAddress, address _randomGeneratorAddress) {
+    constructor(
+        address _tokenAddress,
+        address _randomGeneratorAddress,
+        address _wallet,
+        address _operatorAddress,
+        address _treasuryAddress,
+        address _injectorAddress
+    ){
         token = IERC20(_tokenAddress);
         randomGenerator = IRandomNumberGenerator(_randomGeneratorAddress);
 
@@ -134,6 +147,11 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         _bracketCalculator[3] = 1111;
         _bracketCalculator[4] = 11111;
         _bracketCalculator[5] = 111111;
+        
+        wallet = _wallet;
+        operatorAddress = _operatorAddress;
+        treasuryAddress = _treasuryAddress;
+        injectorAddress = _injectorAddress;
     }
 
     /**
@@ -359,7 +377,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * Callable only by the contract owner
      * @param _randomGeneratorAddress: address of the random generator
      */
-    function changeRandomGenerator(address _randomGeneratorAddress) external onlyOwner {
+    function changeRandomGenerator(address _randomGeneratorAddress) external onlyWallet {
         require(_lotteries[currentLotteryId].status == Status.Claimable, "Lottery not in claimable");
 
         // Request a random number from the generator
@@ -468,7 +486,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @param _tokenAmount: the number of token amount to withdraw
      * @dev Only callable by owner.
      */
-    function recoverWrongTokens(address _tokenAddress, uint256 _tokenAmount) external onlyOwner {
+    function recoverWrongTokens(address _tokenAddress, uint256 _tokenAmount) external onlyWallet {
         require(_tokenAddress != address(token), "Cannot be lottery token");
 
         IERC20(_tokenAddress).safeTransfer(address(msg.sender), _tokenAmount);
@@ -484,7 +502,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      */
     function setMinAndMaxTicketPriceInTokens(uint256 _minPriceTicketInTokens, uint256 _maxPriceTicketInTokens)
         external
-        onlyOwner
+        onlyWallet
     {
         require(_minPriceTicketInTokens <= _maxPriceTicketInTokens, "minPrice must be < maxPrice");
 
@@ -496,8 +514,9 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @notice Set max number of tickets
      * @dev Only callable by owner
      */
-    function setMaxNumberTicketsPerBuy(uint256 _maxNumberTicketsPerBuy) external onlyOwner {
+    function setMaxNumberTicketsPerBuy(uint256 _maxNumberTicketsPerBuy) external onlyWallet {
         require(_maxNumberTicketsPerBuy != 0, "Must be > 0");
+        require(_maxNumberTicketsPerBuy <= 100, "Must be < 100");
         maxNumberTicketsPerBuyOrClaim = _maxNumberTicketsPerBuy;
     }
 
@@ -512,7 +531,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         address _operatorAddress,
         address _treasuryAddress,
         address _injectorAddress
-    ) external onlyOwner {
+    ) external onlyWallet {
         require(_operatorAddress != address(0), "Cannot be zero address");
         require(_treasuryAddress != address(0), "Cannot be zero address");
         require(_injectorAddress != address(0), "Cannot be zero address");
@@ -530,7 +549,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @param _partnerAddress: address of the partner
      * @param _partnerPercent: percentage in bp of the treasury
      */
-    function setPartnerAndFee(address _partnerAddress, uint256 _partnerPercent) external onlyOwner {
+    function setPartnerAndFee(address _partnerAddress, uint256 _partnerPercent) external onlyWallet {
         require(_partnerPercent <= 9000, "Must be < 90%");
         partnerAddress = _partnerAddress;
         partnerPercent = _partnerPercent;
@@ -541,7 +560,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @dev Only callable by owner
      * @param _discounterAddress: address of the discounter
      */
-    function setDiscounter(address _discounterAddress) external onlyOwner {
+    function setDiscounter(address _discounterAddress) external onlyWallet {
         discounter = IDiscounter(_discounterAddress);
     }
 
@@ -622,8 +641,8 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
         // Check ticketId is within range
         if (
-            (_lotteries[_lotteryId].firstTicketIdNextLottery < _ticketId) &&
-            (_lotteries[_lotteryId].firstTicketId >= _ticketId)
+            (_lotteries[_lotteryId].firstTicketIdNextLottery <= _ticketId) || //ticket from next lotteries
+            (_lotteries[_lotteryId].firstTicketId > _ticketId) // ticket from previous lotteries
         ) {
             return 0;
         }
@@ -698,10 +717,9 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         uint32 userNumber = _tickets[_ticketId].number;
 
         // Apply transformation to verify the claim provided by the user is true
-        uint32 transformedWinningNumber = _bracketCalculator[_bracket] +
-            (winningTicketNumber % (uint32(10)**(_bracket + 1)));
+        uint32 transformedWinningNumber = winningTicketNumber % (uint32(10)**(_bracket + 1));
 
-        uint32 transformedUserNumber = _bracketCalculator[_bracket] + (userNumber % (uint32(10)**(_bracket + 1)));
+        uint32 transformedUserNumber = userNumber % (uint32(10)**(_bracket + 1));
 
         // Confirm that the two transformed numbers are the same, if not throw
         if (transformedWinningNumber == transformedUserNumber) {
