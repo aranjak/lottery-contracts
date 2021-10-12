@@ -374,7 +374,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @notice Change the random generator
      * @dev The calls to functions are used to verify the new generator implements them properly.
      * It is necessary to wait for the VRF response before starting a round.
-     * Callable only by the contract owner
+     * Callable only by multisig wallet
      * @param _randomGeneratorAddress: address of the random generator
      */
     function changeRandomGenerator(address _randomGeneratorAddress) external onlyWallet {
@@ -484,7 +484,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @notice It allows the admin to recover wrong tokens sent to the contract
      * @param _tokenAddress: the address of the token to withdraw
      * @param _tokenAmount: the number of token amount to withdraw
-     * @dev Only callable by owner.
+     * @dev Only callable by multisig wallet.
      */
     function recoverWrongTokens(address _tokenAddress, uint256 _tokenAmount) external onlyWallet {
         require(_tokenAddress != address(token), "Cannot be lottery token");
@@ -496,7 +496,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     /**
      * @notice Set Token price ticket upper/lower limit
-     * @dev Only callable by owner
+     * @dev Only callable by multisig wallet
      * @param _minPriceTicketInTokens: minimum price of a ticket in Tokens
      * @param _maxPriceTicketInTokens: maximum price of a ticket in Tokens
      */
@@ -512,7 +512,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     /**
      * @notice Set max number of tickets
-     * @dev Only callable by owner
+     * @dev Only callable by multisig wallet
      */
     function setMaxNumberTicketsPerBuy(uint256 _maxNumberTicketsPerBuy) external onlyWallet {
         require(_maxNumberTicketsPerBuy != 0, "Must be > 0");
@@ -522,7 +522,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     /**
      * @notice Set operator, treasury, and injector addresses
-     * @dev Only callable by owner
+     * @dev Only callable by multisig wallet
      * @param _operatorAddress: address of the operator
      * @param _treasuryAddress: address of the treasury
      * @param _injectorAddress: address of the injector
@@ -545,7 +545,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
     
     /**
      * @notice Set partner and his percentage of the treasure
-     * @dev Only callable by owner
+     * @dev Only callable by multisig wallet
      * @param _partnerAddress: address of the partner
      * @param _partnerPercent: percentage in bp of the treasury
      */
@@ -557,7 +557,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
     
     /**
      * @notice Set discounter contract
-     * @dev Only callable by owner
+     * @dev Only callable by multisig wallet
      * @param _discounterAddress: address of the discounter
      */
     function setDiscounter(address _discounterAddress) external onlyWallet {
