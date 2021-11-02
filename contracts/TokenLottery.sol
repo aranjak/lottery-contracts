@@ -27,7 +27,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     uint256 public maxNumberTicketsPerBuyOrClaim = 100;
 
-    uint256 public maxPriceTicketInTokens = 500 ether;
+    uint256 public maxPriceTicketInTokens = 1000 ether;
     uint256 public minPriceTicketInTokens = 0.005 ether;
 
     uint256 public pendingInjectionNextLottery;
@@ -83,6 +83,24 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     // Keep track of user ticket ids for a given lotteryId
     mapping(address => mapping(uint256 => uint256[])) private _userTicketIdsPerLotteryId;
+    
+    //referrals
+    uint256 public referrerRewardPercentage;
+
+    struct Referrer {
+        // uint256 totalReward;
+        uint256 referralsCount;
+        mapping(uint256 => address) referrals;
+    }
+
+    // staker to referrer
+    mapping(address => address) public referrals;
+    // referrer data
+    mapping(address => Referrer) public referrers;
+    // refferrer to round to reward amount
+    mapping(address => mapping(uint256 => uint256)) public referrersRewards;
+    // round to total rewards
+    mapping(uint256 => uint256) public totalRoundReferrerRewards;
 
     modifier notContract() {
         require(!_isContract(msg.sender), "Contract not allowed");
@@ -122,6 +140,9 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
     event TicketsPurchase(address indexed buyer, uint256 indexed lotteryId, uint256 numberTickets);
     event TicketsClaim(address indexed claimer, uint256 amount, uint256 indexed lotteryId, uint256 numberTickets);
     event FreeTicketsGiven(address indexed buyer, uint256 indexed lotteryId, uint256 numberTickets);
+    event RegisteredReferer(address indexed referral, address indexed referrer);
+    event ReferrerRewardsAccrued(address indexed referrer, address indexed referral, uint256 indexed currentLotteryId, uint256 referrerReward);
+    event ClaimedReward(address indexed referrer, uint256 indexed lotteryId, uint256 reward);
 
     /**
      * @notice Constructor
@@ -152,6 +173,8 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         operatorAddress = _operatorAddress;
         treasuryAddress = _treasuryAddress;
         injectorAddress = _injectorAddress;
+        
+        referrerRewardPercentage = 200;
     }
 
     /**
@@ -160,7 +183,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @param _ticketNumbers: array of ticket numbers between 1,000,000 and 1,999,999
      * @dev Callable by users
      */
-    function buyTickets(uint256 _lotteryId, uint32[] calldata _ticketNumbers)
+    function buyTickets(uint256 _lotteryId, uint32[] calldata _ticketNumbers, address referrer)
         external
         override
         notContract
@@ -208,6 +231,17 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         emit TicketsPurchase(msg.sender, _lotteryId, _ticketNumbers.length);
         if (numberOfFreeTickets > 0) {
             emit FreeTicketsGiven(msg.sender, currentLotteryId, numberOfFreeTickets);
+        }
+        
+        if (referrer != address(0)) {
+            processReferrals(referrer);
+        }
+        
+        if (hasReferrer(msg.sender)) {
+            uint256 referrerReward = amountToTransfer * referrerRewardPercentage / 10000;
+            referrersRewards[referrer][currentLotteryId] += referrerReward;
+            totalRoundReferrerRewards[currentLotteryId] += referrerReward;
+            emit ReferrerRewardsAccrued(referrer, msg.sender, currentLotteryId, referrerReward);
         }
     }
 
@@ -356,6 +390,10 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         }
 
         amountToWithdrawToTreasury += (_lotteries[_lotteryId].amountCollectedInTokens - amountToShareToWinners);
+        
+        if (totalRoundReferrerRewards[currentLotteryId] > 0) {
+            amountToWithdrawToTreasury -= totalRoundReferrerRewards[currentLotteryId];
+        }
 
         // Transfer tokens to treasury address
         if (partnerPercent > 0 && partnerAddress != address(0)) {
@@ -550,7 +588,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @param _partnerPercent: percentage in bp of the treasury
      */
     function setPartnerAndFee(address _partnerAddress, uint256 _partnerPercent) external onlyWallet {
-        require(_partnerPercent <= 9000, "Must be < 90%");
+        require(_partnerPercent <= 5000, "Must be < 50%");
         partnerAddress = _partnerAddress;
         partnerPercent = _partnerPercent;
     }
@@ -759,5 +797,50 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
             size := extcodesize(_addr)
         }
         return size > 0;
+    }
+
+    function processReferrals(address referrer) internal {
+        //Return if sender has referrer alredy or referrer is contract or self ref
+        if (hasReferrer(msg.sender) || _isContract(referrer) || referrer == msg.sender) {
+            return;
+        }
+
+        // check cross refs 
+        if (referrals[referrer] == msg.sender || referrals[referrals[referrer]] == msg.sender) {
+            return;
+        }
+
+        referrals[msg.sender] = referrer;
+
+        Referrer storage refData = referrers[referrer];
+
+        refData.referralsCount = refData.referralsCount + 1;
+        refData.referrals[refData.referralsCount] = msg.sender;
+        emit RegisteredReferer(msg.sender, referrer);
+    }
+
+    function hasReferrer(address addr) public view returns(bool) {
+        return referrals[addr] != address(0);
+    }
+
+    function claimRewards(uint256 lotteryId) external nonReentrant {
+        uint256 reward = referrersRewards[msg.sender][lotteryId];
+        require(reward > 0, "no rewards for selected lottery!");
+        
+        //clear referrer reward as he got it
+        referrersRewards[msg.sender][lotteryId] = 0;
+        IERC20(token).safeTransfer(msg.sender, reward);
+        emit ClaimedReward(msg.sender, lotteryId, reward);
+    }
+    
+
+     /**
+     * @notice Update referrers reward percentage
+     * @param percent: must be in bases point ( 1,5% = 150 bp)
+     * @dev Only callable by multisig wallet.
+     */
+    function updateReferrersPercentage(uint256 percent) external onlyWallet {
+        require(percent <= 1000, "Should be <= 10%");
+        referrerRewardPercentage = percent;
     }
 }

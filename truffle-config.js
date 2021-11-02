@@ -101,6 +101,17 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true
     },
+    rinkeby: {
+      provider: () => new HDWalletProvider(
+        privateKey,
+        "https://rinkeby.infura.io/v3/" + infuraKey
+      ),
+      network_id: 4,
+      gas: 5500000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
     // Useful for private networks
     // private: {
     // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
@@ -146,4 +157,35 @@ module.exports = {
   }
 };
 
-//truffle deploy --network mumbai --token 0xbdedd94ee87c54760a795be5ce858e853ef59ae7
+//Mumbai
+
+//SWAPP token
+//truffle deploy --network mumbai --token 0xBDEdd94EE87c54760a795be5cE858e853EF59aE7
+// RandomNumberGenerator
+// 0xc3caBd6ae8664195714E8b03051dA04f16F4e4Aa
+// TokenLottery
+// 0x04860fb17D237fBb7f7fEE70411dA8e245230802
+
+//LINK token
+//truffle deploy --network mumbai --token 0x326C977E6efc84E512bB9C30f76E30c160eD06FB
+// RandomNumberGenerator
+// 0x40D486231aeDD82200F6185a1cAa4c2d6FbEC89a
+// TokenLottery
+// 0xfEeD5317C78EAb68570Bc9A7CE4C9d52f021fd1f
+
+//BSC Test
+
+//SWAPP token
+// truffle deploy --network bsctestnet --token 0x45f3354Bb22D65bfFDdf65a069fa6F456f253c61
+// RandomNumberGenerator
+// 0xB04E7D80504DBa92062EAcf1e8d309c4F1E6f22A
+// TokenLottery
+// 0x89e7b3E896f14B6e667773B0D5d5387e55fDe826
+
+//LINK token
+//truffle deploy --network bsctestnet --token 0x84b9B910527Ad5C03A9Ca831909E21e236EA7b06
+// RandomNumberGenerator
+// 0x0ED44D359809c53fC6D56a0e05C07ac26e1b4095
+// TokenLottery
+// 0x6Aa2218B3d2F02817Daab5f2B86B95AB43371c03
+
