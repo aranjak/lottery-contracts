@@ -238,10 +238,11 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         }
         
         if (hasReferrer(msg.sender)) {
+            address buyerReferrer = referrals[msg.sender];
             uint256 referrerReward = amountToTransfer * referrerRewardPercentage / 10000;
-            referrersRewards[referrer][currentLotteryId] += referrerReward;
+            referrersRewards[buyerReferrer][currentLotteryId] += referrerReward;
             totalRoundReferrerRewards[currentLotteryId] += referrerReward;
-            emit ReferrerRewardsAccrued(referrer, msg.sender, currentLotteryId, referrerReward);
+            emit ReferrerRewardsAccrued(buyerReferrer, msg.sender, currentLotteryId, referrerReward);
         }
     }
 
@@ -833,8 +834,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         emit ClaimedReward(msg.sender, lotteryId, reward);
     }
     
-
-     /**
+    /**
      * @notice Update referrers reward percentage
      * @param percent: must be in bases point ( 1,5% = 150 bp)
      * @dev Only callable by multisig wallet.
