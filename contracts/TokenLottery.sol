@@ -93,7 +93,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         mapping(uint256 => address) referrals;
     }
 
-    // staker to referrer
+    // player to referrer
     mapping(address => address) public referrals;
     // referrer data
     mapping(address => Referrer) public referrers;
@@ -822,6 +822,10 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
 
     function hasReferrer(address addr) public view returns(bool) {
         return referrals[addr] != address(0);
+    }
+    
+    function getReferralById(address referrer, uint256 id) public view returns (address) {
+        return referrers[referrer].referrals[id];
     }
 
     function claimRewards(uint256 lotteryId) external nonReentrant {
