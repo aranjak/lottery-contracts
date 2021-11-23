@@ -27,7 +27,7 @@ module.exports = async function(deployer, network) {
     //TODO set lottery to RandomNumberGenerator with Multisig
     //TODO top up RandomNumberGenerator with LINK token
     
-    // const tokenLottery = await TokenLottery.deployed();
+    const tokenLottery = await TokenLottery.deployed();
 
     // try {
     //     await randomNumberGenerator.setFee(config.Chainlink.VRF.Fee[network]);
@@ -43,12 +43,12 @@ module.exports = async function(deployer, network) {
     //     console.log(error);
     // }
 
-    // try {
-    //     await randomNumberGenerator.setLotteryAddress(tokenLottery.address);
-    //     console.log('randomNumberGenerator.setLotteryAddress', 'done');
-    // } catch (error) {
-    //     console.log(error);
-    // }
+    try {
+        await randomNumberGenerator.setLotteryAddress(tokenLottery.address);
+        console.log('randomNumberGenerator.setLotteryAddress', 'done');
+    } catch (error) {
+        console.log(error);
+    }
 
     // try {
     //     await tokenLottery.setOperatorAndTreasuryAndInjectorAddresses(config.operator, config.treasure, config.injector);

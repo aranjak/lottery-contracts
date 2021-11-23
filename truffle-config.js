@@ -112,6 +112,17 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true
     },
+    bsc: {
+      provider: () => new HDWalletProvider(
+        privateKey,
+        "https://bsc-dataseed.binance.org/"
+      ),
+      network_id: 56,
+      gas: 5500000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
     // Useful for private networks
     // private: {
     // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
@@ -162,16 +173,16 @@ module.exports = {
 //SWAPP token
 //truffle deploy --network mumbai --token 0xBDEdd94EE87c54760a795be5cE858e853EF59aE7
 // RandomNumberGenerator
-// 0xc3caBd6ae8664195714E8b03051dA04f16F4e4Aa
+// 0x77d024D380C6dc752caF0aE8E152dAdd99E356DC
 // TokenLottery
-// 0x04860fb17D237fBb7f7fEE70411dA8e245230802
+// 0xDa6481C43F7Da07ccC7292F041D3A81E3ccBbdc4
 
 //LINK token
 //truffle deploy --network mumbai --token 0x326C977E6efc84E512bB9C30f76E30c160eD06FB
 // RandomNumberGenerator
-// 0x40D486231aeDD82200F6185a1cAa4c2d6FbEC89a
+// 0x7d3e8a7f4e50cBf822c7a752c6cC36B37FDb082c
 // TokenLottery
-// 0xfEeD5317C78EAb68570Bc9A7CE4C9d52f021fd1f
+// 0x7b9408713b460073366edcFF8253906c851E669a
 
 //BSC Test
 
@@ -189,3 +200,6 @@ module.exports = {
 // TokenLottery
 // 0x6Aa2218B3d2F02817Daab5f2B86B95AB43371c03
 
+
+// 0x967BC82f9a7ADB9bbc0bd74e5c72Ec61bf6B4eA7
+// 0x4Def02917caC0d24C8fD19924c74b3A564f70135

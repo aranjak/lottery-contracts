@@ -589,7 +589,7 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
      * @param _partnerPercent: percentage in bp of the treasury
      */
     function setPartnerAndFee(address _partnerAddress, uint256 _partnerPercent) external onlyWallet {
-        require(_partnerPercent <= 5000, "Must be < 50%");
+        require(_partnerPercent <= 5000, "Must be <= 50%");
         partnerAddress = _partnerAddress;
         partnerPercent = _partnerPercent;
     }
@@ -836,6 +836,24 @@ contract TokenLottery is ReentrancyGuard, ILottery, Ownable {
         referrersRewards[msg.sender][lotteryId] = 0;
         IERC20(token).safeTransfer(msg.sender, reward);
         emit ClaimedReward(msg.sender, lotteryId, reward);
+    }
+
+    function claimRewardsBatch(uint256[] memory lotteryIds) external nonReentrant {
+        uint256 collectedRewards = 0;
+        for (uint i = 0; i < lotteryIds.length; i++) {
+            uint256 lotteryId = lotteryIds[i];
+            uint256 reward = referrersRewards[msg.sender][lotteryId];
+            if (reward > 0) {
+                //clear referrer reward as he got it
+                referrersRewards[msg.sender][lotteryId] = 0;
+                collectedRewards += reward;
+                emit ClaimedReward(msg.sender, lotteryId, reward);
+            }
+        }
+
+        if (collectedRewards > 0) {
+            IERC20(token).safeTransfer(msg.sender, collectedRewards);
+        }
     }
     
     /**

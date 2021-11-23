@@ -33,14 +33,26 @@ module.exports = {
       },
     },
   },
-  operator: "0x1015439f4A6bf25a72df4C4A09fCfADF3a1e126D",
-  treasure: "0x090fAc8D1ce6e8965959a2ecE1a60e42D8c6bc96",
-  injector: "0xf1C405CB05fB98DDbdaF403aA5c4e290B8F9E23d",
+  operator: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
+  treasure: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
+  injector: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
   Multisig: {
-    bsc: "0x83aB6600bf496717Da86D2722e6D0CE39EE0F9Df",
+    bsc: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
     bsctestnet: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
     matic: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
     mumbai: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
     rinkeby: "0x2eD96C63F67416c6105B09F60c05686Db7fa8eDc",
   }
 };
+
+//BSC
+
+//Hibiki token: truffle deploy --network bsc --token 0xa532cfaa916c465a094daf29fea07a13e41e5b36
+//Funds token: truffle deploy --network bsc --token 0x9aa0BC6E3ae67ad878410CcE332FD8C680F953C2
+
+//SWAPP token: truffle deploy --network bsc --token 0x0efE961C733FF46ce34C56a73eba0c6a0E18E0F5
+
+//SafeVault token: truffle deploy --network bsc --token 0xe2e6e66551E5062Acd56925B48bBa981696CcCC2
+//EthVault token: truffle deploy --network bsc --token 0x63d55ecDEbF08f93D0F2D5533035ddcCaa997d7A
+//Vault(BTC) token: truffle deploy --network bsc --token 0x92da405b6771c9Caa7988A41dd969a73d10A3cc6
+
